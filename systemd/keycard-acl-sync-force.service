@@ -4,14 +4,15 @@ After=network-online.target
 Wants=network-online.target
 
 [Service]
-OnFailure=keycard-alert-handler@%n.service
 Type=oneshot
 User=keycard
 Group=keycard
 WorkingDirectory=/opt/keycard-service
+EnvironmentFile=-/etc/default/keycard-service
 ExecStart=/opt/keycard-service/scripts/acl-sync --force
 StandardOutput=journal
 StandardError=journal
+OnFailure=keycard-alert-handler@%n.service
 
 [Install]
 WantedBy=multi-user.target

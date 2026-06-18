@@ -56,15 +56,22 @@ install: build-tools
 	@install -m 755 $(BIN_DIR)/uhppote-cli /opt/keycard-service/bin/
 	@install -m 755 $(BIN_DIR)/uhppoted-app-sheets /opt/keycard-service/bin/
 	@install -m 755 $(BIN_DIR)/uhppoted-app-wild-apricot /opt/keycard-service/bin/
+	@install -d /opt/keycard-service/scripts
 	@install -m 755 scripts/* /opt/keycard-service/scripts/
-	@install -m 644 config/uhppoted.conf /etc/keycard-service/uhppoted.conf
+	@install -d /opt/keycard-service/rules
+	@install -m 644 rules/access-rules.grl /opt/keycard-service/rules/
+	@install -d /etc/keycard-service/credentials
+	@install -m 600 config/uhppoted.conf /etc/keycard-service/uhppoted.conf
 	@install -d /var/lib/keycard-service
 	@install -d /var/lib/keycard-service/events
 	@install -d /var/lib/keycard-service/db
 	@install -d /var/lib/keycard-service/logs
-
+	@install -d /var/lib/keycard-service/telemetry
+	@if [ ! -f /etc/default/keycard-service ]; then \
+		install -m 644 config/default.env /etc/default/keycard-service; \
+	fi
 	@echo "Installing systemd units..."
-	@cp systemd/*.service systemd/*.timer /etc/systemd/system/
+	@install -m 644 systemd/*.service systemd/*.timer /etc/systemd/system/
 	@systemctl daemon-reload
 
 	@echo "Installation complete."
@@ -72,12 +79,15 @@ install: build-tools
 	@echo "  1. Copy credentials to /etc/keycard-service/credentials/"
 	@echo "  2. Review /etc/keycard-service/uhppoted.conf"
 	@echo "  3. Edit /etc/default/keycard-service for environment overrides"
-	@echo "  4. systemctl enable --now keycard-acl-sync.timer keycard-event-pull.timer keycard-event-report.timer keycard-clock-sync.timer"
+	@echo "  4. Create user: useradd -r -s /usr/sbin/nologin keycard"
+	@echo "  5. Set ownership: chown -R keycard:keycard /var/lib/keycard-service"
+	@echo "  6. systemctl enable --now keycard-event-pull.timer keycard-event-report.timer keycard-acl-sync.timer keycard-acl-sync-force.timer keycard-clock-sync.timer"
 
 uninstall:
 	@echo "Removing installed files..."
 	@rm -rf /opt/keycard-service
 	@rm -rf /etc/keycard-service
+	@rm -f /etc/default/keycard-service
 	@rm -f /etc/systemd/system/keycard-*.service /etc/systemd/system/keycard-*.timer
 	@systemctl daemon-reload
 

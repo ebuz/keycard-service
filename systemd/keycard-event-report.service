@@ -5,14 +5,15 @@ Wants=network-online.target
 After=keycard-event-pull.service
 
 [Service]
-OnFailure=keycard-alert-handler@%n.service
 Type=oneshot
 User=keycard
 Group=keycard
 WorkingDirectory=/opt/keycard-service
+EnvironmentFile=-/etc/default/keycard-service
 ExecStart=/opt/keycard-service/scripts/event-report
 StandardOutput=journal
 StandardError=journal
+OnFailure=keycard-alert-handler@%n.service
 
 [Install]
 WantedBy=multi-user.target

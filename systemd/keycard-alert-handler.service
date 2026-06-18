@@ -2,8 +2,11 @@
 Description=Keycard Service: Dispatch alert on service failure
 
 [Service]
-OnFailure=keycard-alert-handler@%n.service
 Type=oneshot
-ExecStart=/opt/keycard-service/scripts/alert %i ${EXIT_CODE} "Keycard service unit failed"
+EnvironmentFile=-/etc/default/keycard-service
+ExecStart=/opt/keycard-service/scripts/alert %I
 StandardOutput=journal
 StandardError=journal
+
+# Prevent recursive alerts: do not trigger alert handler on alert handler failure
+OnFailure=
