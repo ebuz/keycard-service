@@ -13,13 +13,6 @@
 # Pinned versions
 UHPPOTED_VERSION ?= v0.8.11
 
-# Required tools and their source repositories
-TOOLS := \
-	uhppote-cli:github.com/uhppoted/uhppote-cli \
-	uhppoted-app-sheets:github.com/uhppoted/uhppoted-app-sheets \
-	uhppoted-app-wild-apricot:github.com/uhppoted/uhppoted-app-wild-apricot \
-	uhppote-simulator:github.com/uhppoted/uhppote-simulator
-
 BUILD_DIR := build
 BIN_DIR := bin
 GO := go
@@ -58,15 +51,20 @@ $(BIN_DIR):
 
 build-tools: $(BUILD_DIR) $(BIN_DIR)
 	@echo "Building uhppoted tools at $(UHPPOTED_VERSION)..."
-	@$(foreach tool,$(TOOLS),\
-		$(eval NAME := $(word 1,$(subst :, ,$(tool))))\
-		$(eval REPO := $(word 2,$(subst :, ,$(tool))))\
-		@echo "  building $(NAME)..."; \
-		if [ ! -d "$(BUILD_DIR)/$(NAME)" ]; then \
-			git clone --depth 1 --branch $(UHPPOTED_VERSION) "https://$(REPO).git" "$(BUILD_DIR)/$(NAME)"; \
+	@for tool in uhppote-cli:github.com/uhppoted/uhppote-cli:cmd/uhppote-cli \
+	             uhppoted-app-sheets:github.com/uhppoted/uhppoted-app-sheets:cmd/uhppoted-app-sheets \
+	             uhppoted-app-wild-apricot:github.com/uhppoted/uhppoted-app-wild-apricot:cmd/uhppoted-app-wild-apricot; do \
+		NAME="$${tool%%:*}"; \
+		REPO="$$(echo "$$tool" | cut -d: -f2)"; \
+		MAIN="$$(echo "$$tool" | cut -d: -f3)"; \
+		echo "  building $$NAME..."; \
+		if [ ! -d "$(BUILD_DIR)/$$NAME" ]; then \
+			git clone --depth 1 --branch $(UHPPOTED_VERSION) "https://$$REPO.git" "$(BUILD_DIR)/$$NAME"; \
 		fi; \
-		cd "$(BUILD_DIR)/$(NAME)" && $(GO) build -o "../../$(BIN_DIR)/$(NAME)" .; \
-	)
+		cd "$(BUILD_DIR)/$$NAME" && $(GO) build -o "../../$(BIN_DIR)/$$NAME" "./$$MAIN"; \
+		chmod +x "../../$(BIN_DIR)/$$NAME"; \
+		cd ../..; \
+	done
 	@echo "Done. Binaries in $(BIN_DIR)/"
 
 build-simulator: $(BUILD_DIR) $(BIN_DIR)
@@ -74,7 +72,8 @@ build-simulator: $(BUILD_DIR) $(BIN_DIR)
 	@if [ ! -d "$(BUILD_DIR)/uhppote-simulator" ]; then \
 		git clone --depth 1 --branch $(UHPPOTED_VERSION) "https://github.com/uhppoted/uhppote-simulator.git" "$(BUILD_DIR)/uhppote-simulator"; \
 	fi
-	@cd "$(BUILD_DIR)/uhppote-simulator" && $(GO) build -o "../../$(BIN_DIR)/uhppote-simulator" .
+	cd "$(BUILD_DIR)/uhppote-simulator" && $(GO) build -o "../../$(BIN_DIR)/uhppote-simulator" "./cmd/uhppote-simulator"
+	chmod +x "$(BIN_DIR)/uhppote-simulator"
 	@echo "Done. Simulator in $(BIN_DIR)/uhppote-simulator"
 
 test: build-tools build-simulator
