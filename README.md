@@ -159,16 +159,11 @@ everything from Go compilation to systemd syntax to data preservation.
 ## Alerting
 
 Failed units trigger `keycard-alert-handler@<unit>.service`, which calls
-`scripts/alert`. The alert script attempts, in order:
+`scripts/alert`. The alert script supports, in order of preference:
 
-1. Discord webhook (`DISCORD_ALERT_WEBHOOK`)
-2. Discord bot (`DISCORD_BOT_TOKEN` + `DISCORD_ALERT_CHANNEL_ID`)
-3. Email (`ALERT_EMAIL`)
-
-For Discord bot integration with the existing BlackbeardBot:
-- BlackbeardBot runs under the `blackbeard` user
-- Webhook is the simplest path (no bot token sharing needed)
-- Bot token integration is available if preferred
+1. **Discord webhook** (`DISCORD_ALERT_WEBHOOK`) — simplest, no bot setup needed
+2. **Discord bot** (`DISCORD_BOT_TOKEN` + `DISCORD_ALERT_CHANNEL_ID`) — if you have a bot token
+3. **Email** (`ALERT_EMAIL`) — via the system `mail` command
 
 ---
 
