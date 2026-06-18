@@ -1,0 +1,19 @@
+# Build artifacts
+bin/
+build/
+
+# Python bytecode
+__pycache__/
+*.pyc
+*.pyo
+
+# Editor files
+*.swp
+*.swo
+*~
+.DS_Store
+
+# IDE
+.idea/
+.vscode/
+*.iml
