@@ -143,6 +143,17 @@ make test
 Builds the simulator, starts it, runs each script against the simulated
 controller, and reports pass/fail.
 
+**Integration tests** — validates the full deployment lifecycle including
+install, upgrade, uninstall, and data preservation for both keycard-service
+and blackbeard-bot:
+
+```bash
+sudo bash tests/run-install-tests.sh
+```
+
+This requires root (installs to /opt, /etc, /var, /etc/systemd) and tests
+everything from Go compilation to systemd syntax to data preservation.
+
 ---
 
 ## Alerting
