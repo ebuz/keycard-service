@@ -1,0 +1,18 @@
+[Unit]
+Description=Keycard Service: Gather telemetry (optional)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+OnFailure=keycard-alert-handler@%n.service
+Type=oneshot
+User=keycard
+Group=keycard
+WorkingDirectory=/opt/keycard-service
+ExecStart=/opt/keycard-service/scripts/telemetry
+StandardOutput=journal
+StandardError=journal
+ConditionEnvironment=KEYCARD_TELEMETRY=1
+
+[Install]
+WantedBy=multi-user.target

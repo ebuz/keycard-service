@@ -1,0 +1,297 @@
+// *** GRULES ***
+// GROUPS
+//   598098 Exec
+//   549796 Sailing - Beginner
+//   549797 Sailing - Intermediate I
+//   549798 Sailing - Intermediate II
+//   752304 Sailing - Advanced I
+//   549799 Sailing - Advanced II
+//   549800 Sailing - Advanced II.5
+//   549801 Sailing - Advanced III
+//   549802 Sailing - Cat I
+//   549803 Sailing - Cat II
+//   549804 Sailing - Cat III
+//   549807 SUP
+//   549808 Windsurfing I
+//   549809 Windsurfing II
+//   549810 Windsurfing III - High Wind
+//   549805 Kayak I - Basic
+//   549806 Kayak II - Intermediate
+//   635809 Instructor - Sailing
+
+// DOORS
+//   Club Room Main
+//   Club Room Slider
+//   Fixit Room Main
+//   Fixit Room Slider
+//   Hobie Room (also known as the High-Performance or HP Room)
+//   Windsurf L1 Locker (no longer exists, combo for lock on website)
+//   Windsurf L2 Locker (no longer exists, combo for lock on website)
+//   Kayak Locker (no longer exists, combo for lock on website)
+//   Exec Locker (no longer exists, combo for lock on website)
+//   UnusedD21
+//   UnusedD22
+//   UnusedD24
+
+// MEMBERSHIP
+//   UBC Student
+//   General Member
+//   Social Member
+//   JSCA Staff
+
+rule StartDate "Sets the start date to the 'registered' field" {
+     when
+         member.HasRegistered()
+     then
+         permissions.SetStartDate(member.Registered);
+         Retract("StartDate");
+} 
+
+rule EndDate "Sets the end date to the 'expires' field" {
+     when
+         member.HasExpires()
+     then
+         permissions.SetEndDate(member.Expires);
+         Retract("EndDate");
+}
+
+rule Suspended "Revokes all access when suspended" {
+     when
+         member.IsSuspended()
+     then
+         permissions.Revoke("*");
+         Retract("Suspended");
+}
+
+rule JSCA "Access rules for Jericho staff" {
+     when
+         member.IsActive() && member.Is("JSCA Staff")
+     then
+         permissions.Grant("Club Room Main");
+         permissions.Grant("Club Room Slider");
+         permissions.Grant("Hobie Room");
+         permissions.Grant("Fixit Room Main");
+         permissions.Grant("Fixit Room Slider");
+         Retract("JSCA");
+}
+
+// 598098 Exec
+rule Exec "Grants an Exec access to all doors" {
+     when
+         member.HasGroup("Exec") || member.HasGroup(598098)
+     then
+         permissions.Grant("Club Room Main");
+         permissions.Grant("Club Room Slider");
+         permissions.Grant("Hobie Room");
+         permissions.Grant("Kayak Locker");
+         permissions.Grant("Windsurf L1 Locker");
+         permissions.Grant("Windsurf L2 Locker");
+         permissions.Grant("Fixit Room Main");
+         permissions.Grant("Fixit Room Slider");
+         permissions.Grant("Exec Locker");
+         Retract("Exec");
+}
+
+// 549796 Sailing - Beginner
+rule Beginner "Grants an active member with 'Sailing - Beginner' certification access to Club and Fixit rooms" {
+     when
+         member.IsActive() && !member.Is("Social Member") && (member.HasGroup("Sailing - Beginner") || member.HasGroup(549796))
+     then
+         permissions.Grant("Club Room Main");
+         permissions.Grant("Club Room Slider");
+         permissions.Grant("Fixit Room Main");
+         permissions.Grant("Fixit Room Slider");
+         Retract("Beginner");
+}
+
+// 549797 Sailing - Intermediate I
+rule Intermediate1 "Grants an active member with 'Sailing - Intermediate I' certification access to Club and Fixit rooms" {
+     when
+         member.IsActive() && !member.Is("Social Member") && (member.HasGroup("Sailing - Intermediate I") || member.HasGroup(549797))
+     then
+         permissions.Grant("Club Room Main");
+         permissions.Grant("Club Room Slider");
+         permissions.Grant("Fixit Room Main");
+         permissions.Grant("Fixit Room Slider");
+         Retract("Intermediate1");
+}
+
+// 549798 Sailing - Intermediate II
+rule Intermediate2 "Grants an active member with 'Sailing - Intermediate II' certification access to Club and Fixit rooms" {
+     when
+         member.IsActive() && !member.Is("Social Member") && (member.HasGroup("Sailing - Intermediate II") || member.HasGroup(549798))
+     then
+         permissions.Grant("Club Room Main");
+         permissions.Grant("Club Room Slider");
+         permissions.Grant("Fixit Room Main");
+         permissions.Grant("Fixit Room Slider");
+         Retract("Intermediate2");
+}
+
+rule Advanced1 "Grants an active member with 'Sailing - Advanced I' certification access to Club, Hobie and Fixit rooms" {
+     when
+         member.IsActive() && !member.Is("Social Member") && (member.HasGroup("Sailing - Advanced I") || member.HasGroup(752304))
+     then
+         permissions.Grant("Club Room Main");
+         permissions.Grant("Club Room Slider");
+         permissions.Grant("Fixit Room Main");
+         permissions.Grant("Fixit Room Slider");
+         permissions.Grant("Hobie Room");
+         Retract("Advanced1");
+}
+
+rule Advanced2 "Grants an active member with 'Sailing - Advanced II' certification access to Club, Hobie and Fixit rooms" {
+     when
+         member.IsActive() && !member.Is("Social Member") && (member.HasGroup("Sailing - Advanced II") || member.HasGroup(549799))
+     then
+         permissions.Grant("Club Room Main");
+         permissions.Grant("Club Room Slider");
+         permissions.Grant("Fixit Room Main");
+         permissions.Grant("Fixit Room Slider");
+         permissions.Grant("Hobie Room");
+         Retract("Advanced2");
+}
+
+rule Advanced2AndAHalf "Grants an active member with 'Sailing - Advanced II.5' certification access to Club, Hobie and Fixit rooms" {
+     when
+         member.IsActive() && !member.Is("Social Member") && (member.HasGroup("Sailing - Advanced II.5") || member.HasGroup(549800))
+     then
+         permissions.Grant("Club Room Main");
+         permissions.Grant("Club Room Slider");
+         permissions.Grant("Fixit Room Main");
+         permissions.Grant("Fixit Room Slider");
+         permissions.Grant("Hobie Room");
+         Retract("Advanced2AndAHalf");
+}
+
+rule Advanced3 "Grants an active member with 'Sailing - Advanced III' certification access to Club, Fixit and Hobie rooms" {
+     when
+         member.IsActive() && !member.Is("Social Member") && (member.HasGroup("Sailing - Advanced II") || member.HasGroup(549801))
+     then
+         permissions.Grant("Club Room Main");
+         permissions.Grant("Club Room Slider");
+         permissions.Grant("Fixit Room Main");
+         permissions.Grant("Fixit Room Slider");
+         permissions.Grant("Hobie Room");
+         Retract("Advanced3");
+}
+
+// 549802 Sailing - Cat I
+rule Cat1 "Grants an active member with 'Sailing - Cat I' certification access to Club, Fixit and Hobie rooms" {
+     when
+         member.IsActive() && !member.Is("Social Member") && (member.HasGroup("Sailing - Cat I") || member.HasGroup(549802))
+     then
+         permissions.Grant("Club Room Main");
+         permissions.Grant("Club Room Slider");
+         permissions.Grant("Fixit Room Main");
+         permissions.Grant("Fixit Room Slider");
+         permissions.Grant("Hobie Room");
+         Retract("Cat1");
+}
+
+// 549803 Sailing - Cat II
+rule Cat2 "Grants an active member with 'Sailing - Cat II' certification access to Club, Fixit and Hobie rooms" {
+     when
+         member.IsActive() && !member.Is("Social Member") && (member.HasGroup("Sailing - Cat II") || member.HasGroup(549803))
+     then
+         permissions.Grant("Club Room Main");
+         permissions.Grant("Club Room Slider");
+         permissions.Grant("Fixit Room Main");
+         permissions.Grant("Fixit Room Slider");
+         permissions.Grant("Hobie Room");
+         Retract("Cat2");
+}
+
+// 549804 Sailing - Cat III
+rule Cat3 "Grants an active member with 'Sailing - Cat III' certification access to Club, Fixit and Hobie rooms" {
+     when
+         member.IsActive() && !member.Is("Social Member") && (member.HasGroup("Sailing - Cat III") || member.HasGroup(549804))
+     then
+         permissions.Grant("Club Room Main");
+         permissions.Grant("Club Room Slider");
+         permissions.Grant("Fixit Room Main");
+         permissions.Grant("Fixit Room Slider");
+         permissions.Grant("Hobie Room");
+         Retract("Cat3");
+}
+
+// 549807 SUP
+rule SUP "Grants an active member with 'SUP' certification access to Club and Fixit rooms and Fixit room slider" {
+     when
+         member.IsActive() && !member.Is("Social Member") && (member.HasGroup("SUP") || member.HasGroup(549807))
+     then
+         permissions.Grant("Club Room Main");
+         permissions.Grant("Club Room Slider");
+         permissions.Grant("Fixit Room Main");
+         permissions.Grant("Fixit Room Slider");
+         permissions.Grant("Windsurf L1 Locker");
+         Retract("SUP");
+}
+
+// 549808 Windsurfing I
+rule Windsurfing1 "Grants an active member with 'Windsurfing I' certification access to Club and Fixit rooms, Fixit room slider and Windsurfing L1 locker" {
+     when
+         member.IsActive() && !member.Is("Social Member") && (member.HasGroup("Windsurfing I") || member.HasGroup(549808))
+     then
+         permissions.Grant("Club Room Main");
+         permissions.Grant("Club Room Slider");
+         permissions.Grant("Fixit Room Main");
+         permissions.Grant("Fixit Room Slider");
+         permissions.Grant("Windsurf L1 Locker");
+         Retract("Windsurfing1");
+}
+
+// 549809 Windsurfing II
+rule Windsurfing2 "Grants an active member with 'Windsurfing II' certification access to Club and Fixit rooms, Fixit room slider and Windsurfing L1 and L2 lockers" {
+     when
+         member.IsActive() && !member.Is("Social Member") && (member.HasGroup("Windsurfing II") || member.HasGroup(549809))
+     then
+         permissions.Grant("Club Room Main");
+         permissions.Grant("Club Room Slider");
+         permissions.Grant("Fixit Room Main");
+         permissions.Grant("Fixit Room Slider");
+         permissions.Grant("Windsurf L1 Locker");
+         permissions.Grant("Windsurf L2 Locker");
+         Retract("Windsurfing2");
+}
+
+// 549810 Windsurfing III - High Wind
+rule Windsurfing3 "Grants an active member with 'Windsurfing III' certification access to Club and Fixit rooms, Fixit room slider and Windsurfing L1 and L2 lockers" {
+     when
+         member.IsActive() && !member.Is("Social Member") && (member.HasGroup("Windsurfing III - High Wind") || member.HasGroup(549810))
+     then
+         permissions.Grant("Club Room Main");
+         permissions.Grant("Club Room Slider");
+         permissions.Grant("Fixit Room Main");
+         permissions.Grant("Fixit Room Slider");
+         permissions.Grant("Windsurf L1 Locker");
+         permissions.Grant("Windsurf L2 Locker");
+         Retract("Windsurfing3");
+}
+
+// 549805 Kayak I - Basic
+rule Kayak1 "Grants an active member with 'Kayak I' certification access to Club and Fixit rooms and Kayak locker" {
+     when
+         member.IsActive() && !member.Is("Social Member") && (member.HasGroup("Kayak I - Basic") || member.HasGroup(549805))
+     then
+         permissions.Grant("Club Room Main");
+         permissions.Grant("Club Room Slider");
+         permissions.Grant("Fixit Room Main");
+         permissions.Grant("Fixit Room Slider");
+         permissions.Grant("Kayak Locker");
+         Retract("Kayak1");
+}
+
+// 549806 Kayak II - Intermediate
+rule Kayak2 "Grants an active member with 'Kayak II' certification access to Club and Fixit rooms and Kayak locker" {
+     when
+         member.IsActive() && !member.Is("Social Member") && (member.HasGroup("Kayak II - Intermediate") || member.HasGroup(549806))
+     then
+         permissions.Grant("Club Room Main");
+         permissions.Grant("Club Room Slider");
+         permissions.Grant("Fixit Room Main");
+         permissions.Grant("Fixit Room Slider");
+         permissions.Grant("Kayak Locker");
+         Retract("Kayak2");
+}
+// *** END GRULES ***

@@ -1,0 +1,39 @@
+#!/bin/bash
+set -euo pipefail
+
+# Keycard Service: Alert helper
+# Sends alerts via Discord or email. Designed to be called from systemd OnFailure=
+# handlers or from scripts on error conditions.
+
+DISCORD_ALERT_WEBHOOK="${DISCORD_ALERT_WEBHOOK:-}"
+DISCORD_ALERT_CHANNEL="${DISCORD_ALERT_CHANNEL:-}"
+ALERT_EMAIL="${ALERT_EMAIL:-}"
+
+SERVICE_NAME="${1:-unknown}"
+EXIT_CODE="${2:-unknown}"
+MESSAGE="${3:-Service ${SERVICE_NAME} failed with exit code ${EXIT_CODE}}"
+
+send_discord() {
+    local msg="$1"
+    if [ -n "${DISCORD_ALERT_WEBHOOK}" ]; then
+        curl -s -X POST \
+            -H "Content-Type: application/json" \
+            -d "{\"content\":\"[keycard-service] ${msg}\"}" \
+            "${DISCORD_ALERT_WEBHOOK}" > /dev/null || true
+    fi
+}
+
+send_email() {
+    local msg="$1"
+    if [ -n "${ALERT_EMAIL}" ] && command -v mail >/dev/null 2>&1; then
+        echo "${msg}" | mail -s "[keycard-service] Alert: ${SERVICE_NAME}" "${ALERT_EMAIL}" || true
+    fi
+}
+
+# Attempt Discord webhook alert
+send_discord "${MESSAGE}"
+
+# Attempt email alert
+send_email "${MESSAGE}"
+
+echo "Alert dispatched for ${SERVICE_NAME}"

@@ -1,0 +1,25 @@
+#!/bin/bash
+  
+DATETIME=$(date "+%Y-%m-%d")
+CREDENTIALS="/etc/uhppoted/.google/ubcs.json"
+ACL="/var/ubcs/acl/UBCS.acl"
+REPORT="/var/ubcs/acl/UBCS.rpt"
+TMP="/tmp/UBCS.rpt"
+SPREADSHEET="https://docs.google.com/spreadsheets/d/1toyc9s1hIbC_lisDh1E7r8XFZfNsXhMX3CSv9R5rFMo"
+DELAY="5m0s"
+FORCE=""
+
+if [[ -n $1 ]] && [[ $1 = "--force" ]]
+then
+   FORCE="--force"
+fi
+
+if [[ -n $2 ]]
+then
+   DELAY=$2
+fi
+
+./uhppoted-app-sheets get --workdir /var/ubcs --credentials "${CREDENTIALS}" --url "${SPREADSHEET}" --range "ACL!A2:O" -file "${ACL}"
+./uhppote-cli compare-acl "${ACL}" "${TMP}"
+cat "${TMP}" >> "${REPORT}"
+./uhppoted-app-sheets load-acl $FORCE --workdir /var/ubcs --credentials "${CREDENTIALS}" --url "${SPREADSHEET}" --range "ACL!A2:O" --log-range "Log!A1:H" --log-retention 14 --report-range "Report!A1:C" --report-retention 7 --delay $DELAY

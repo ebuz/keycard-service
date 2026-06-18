@@ -1,0 +1,104 @@
+#!/bin/bash
+set -euo pipefail
+
+# Keycard Service: Sync member ACL from Wild Apricot
+# Replaces the legacy wild-apricot script.
+
+# Configuration (can be overridden via /etc/default/keycard-service)
+UHPPOUTED_CONF="${UHPPOUTED_CONF:-/etc/keycard-service/uhppoted.conf}"
+WORKDIR="${WORKDIR:-/var/lib/keycard-service}"
+WILDA_CREDENTIALS="${WILDA_CREDENTIALS:-/etc/keycard-service/credentials/wild-apricot.json}"
+GOOGLE_CREDENTIALS="${GOOGLE_CREDENTIALS:-/etc/keycard-service/credentials/google.json}"
+SPREADSHEET="${SPREADSHEET:-https://docs.google.com/spreadsheets/d/1V2NxKgbt-xdNdx4_qWHwJsW54gU7jEIdkN_h0iREqkU}"
+
+# Default rules from repo; override via RULES_URL env var
+RULES_FILE="${RULES_FILE:-/opt/keycard-service/rules/access-rules.grl}"
+RULES_URL="${RULES_URL:-}"
+
+if [ -n "${RULES_URL}" ]; then
+    RULES="${RULES_URL}"
+else
+    RULES="file://${RULES_FILE}"
+fi
+
+MEMBERS="${WORKDIR}/wild-apricot/members.tsv"
+ACL="${WORKDIR}/wild-apricot/acl.tsv"
+SUMMARY="${WORKDIR}/wild-apricot/acl-summary.tsv"
+REPORT="${WORKDIR}/wild-apricot/acl-report.tsv"
+BIN_DIR="/opt/keycard-service/bin"
+
+mkdir -p "${WORKDIR}/wild-apricot/logs" "${WORKDIR}/wild-apricot/reports"
+
+FORCE=""
+if [ "${1:-}" = "--force" ]; then
+    FORCE="--force"
+fi
+
+# Clean up stale outputs
+rm -f "${SUMMARY}" "${REPORT}"
+rm -f "${WORKDIR}/wild-apricot/reports/current-report"
+
+# Run the ACL sync
+"${BIN_DIR}/uhppoted-app-wild-apricot" \
+    load-acl \
+    --workdir "${WORKDIR}" \
+    --credentials "${WILDA_CREDENTIALS}" \
+    --rules "${RULES}" \
+    ${FORCE} \
+    --log "${SUMMARY}" \
+    --report "${REPORT}"
+
+# Upload logs and reports to Google Sheets
+if [ -f "${SUMMARY}" ]; then
+    echo "Uploading log to Google Sheets"
+    cat "${SUMMARY}" >> "${WORKDIR}/wild-apricot/logs/acl.log"
+    cat "${WORKDIR}/wild-apricot/logs/"* | sort | uniq > /tmp/acl-combined.log
+    "${BIN_DIR}/uhppoted-app-sheets" \
+        put --workdir "${WORKDIR}" \
+        --credentials "${GOOGLE_CREDENTIALS}" \
+        --url "${SPREADSHEET}" \
+        --range "Log!A2:H" \
+        --file "/tmp/acl-combined.log" || echo "WARN: Failed to upload log" >&2
+fi
+
+if [ -f "${REPORT}" ]; then
+    echo "Uploading report to Google Sheets"
+    cat "${REPORT}" >> "${WORKDIR}/wild-apricot/reports/acl-report"
+    cp "${WORKDIR}/wild-apricot/reports/acl-report" /tmp/acl-current-report
+    "${BIN_DIR}/uhppoted-app-sheets" \
+        put --workdir "${WORKDIR}" \
+        --credentials "${GOOGLE_CREDENTIALS}" \
+        --url "${SPREADSHEET}" \
+        --range "Report!A2:D" \
+        --file "/tmp/acl-current-report" || echo "WARN: Failed to upload report" >&2
+fi
+
+# Fetch and upload member list + ACL snapshot
+if [ -f "${SUMMARY}" ] || [ -f "${REPORT}" ]; then
+    "${BIN_DIR}/uhppoted-app-wild-apricot" \
+        get-members --workdir "${WORKDIR}/wild-apricot" \
+        --credentials "${WILDA_CREDENTIALS}" \
+        --file "${MEMBERS}"
+
+    "${BIN_DIR}/uhppoted-app-wild-apricot" \
+        get-acl --workdir "${WORKDIR}/wild-apricot" \
+        --credentials "${WILDA_CREDENTIALS}" \
+        --rules "${RULES}" \
+        --file "${ACL}"
+
+    "${BIN_DIR}/uhppoted-app-sheets" \
+        put --workdir "${WORKDIR}/wild-apricot" \
+        --credentials "${GOOGLE_CREDENTIALS}" \
+        --url "${SPREADSHEET}" \
+        --range "Members!A1:X" \
+        --file "${MEMBERS}" || echo "WARN: Failed to upload members" >&2
+
+    "${BIN_DIR}/uhppoted-app-sheets" \
+        put --workdir "${WORKDIR}/wild-apricot" \
+        --credentials "${GOOGLE_CREDENTIALS}" \
+        --url "${SPREADSHEET}" \
+        --range "ACL!B2:P" \
+        --file "${ACL}" || echo "WARN: Failed to upload ACL" >&2
+fi
+
+echo "ACL sync completed successfully"

@@ -1,0 +1,17 @@
+[Unit]
+Description=Keycard Service: Sync member ACL from Wild Apricot
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+OnFailure=keycard-alert-handler@%n.service
+Type=oneshot
+User=keycard
+Group=keycard
+WorkingDirectory=/opt/keycard-service
+ExecStart=/opt/keycard-service/scripts/acl-sync
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target

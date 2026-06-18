@@ -1,0 +1,48 @@
+#!/bin/bash
+set -euo pipefail
+
+# Keycard Service: Import events into SQLite and generate reports
+# Replaces the legacy ubcs-events script.
+
+UHPPOUTED_CONF="${UHPPOUTED_CONF:-/etc/keycard-service/uhppoted.conf}"
+DB_DIR="${DB_DIR:-/var/lib/keycard-service/db}"
+STAGING_DIR="${STAGING_DIR:-/tmp/keycard-service}"
+EVENTS_SQL="${EVENTS_SQL:-/opt/keycard-service/scripts/events.sql}"
+
+DB="${DB_DIR}/keycard.db"
+
+mkdir -p "${DB_DIR}"
+
+# Ensure staging files exist (even if empty)
+for controller in 423195692 423195744 423195750; do
+    touch "${STAGING_DIR}/${controller}.events"
+done
+
+# Import events, prune old, generate reports
+sqlite3 "${DB}" ".read ${EVENTS_SQL}"
+
+# Google Sheets export (active Wild Apricot sheet)
+# These use the same credentials as the ACL sync.
+GOOGLE_CREDS="${GOOGLE_CREDS:-/etc/keycard-service/credentials/google.json}"
+SPREADSHEET="${SPREADSHEET:-https://docs.google.com/spreadsheets/d/1V2NxKgbt-xdNdx4_qWHwJsW54gU7jEIdkN_h0iREqkU}"
+BIN_DIR="/opt/keycard-service/bin"
+
+if [ -f /tmp/events.tsv ]; then
+    "${BIN_DIR}/uhppoted-app-sheets" \
+        put --workdir /var/lib/keycard-service \
+        --credentials "${GOOGLE_CREDS}" \
+        --url "${SPREADSHEET}" \
+        --range "Events!Q1:T" \
+        --file /tmp/events.tsv || echo "WARN: Failed to upload events report" >&2
+fi
+
+if [ -f /tmp/denied.tsv ]; then
+    "${BIN_DIR}/uhppoted-app-sheets" \
+        put --workdir /var/lib/keycard-service \
+        --credentials "${GOOGLE_CREDS}" \
+        --url "${SPREADSHEET}" \
+        --range "Denied!B1:D" \
+        --file /tmp/denied.tsv || echo "WARN: Failed to upload denied report" >&2
+fi
+
+echo "Event report completed successfully"

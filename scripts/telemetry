@@ -1,0 +1,27 @@
+#!/bin/bash
+set -euo pipefail
+
+# Keycard Service: Optional telemetry gatherer
+# Collects disk, IP, and journal health info. Disabled by default.
+# Enable by setting KEYCARD_TELEMETRY=1 in /etc/default/keycard-service.
+
+TELEMETRY_DIR="${TELEMETRY_DIR:-/var/lib/keycard-service/telemetry}"
+mkdir -p "${TELEMETRY_DIR}"
+
+NOW="$(date -Iseconds)"
+{
+    echo "--- telemetry ${NOW} ---"
+    echo "disk:"
+    df -h / 2>/dev/null || true
+    echo ""
+    echo "wan_ip:"
+    dig +short myip.opendns.com @resolver1.opendns.com 2>/dev/null || true
+    echo ""
+    echo "systemctl_timers:"
+    systemctl list-timers --all --no-pager --no-legend 2>/dev/null || true
+    echo ""
+    echo "failed_units:"
+    systemctl --failed --no-pager --no-legend 2>/dev/null || true
+} >> "${TELEMETRY_DIR}/telemetry.log"
+
+echo "Telemetry recorded at ${NOW}"

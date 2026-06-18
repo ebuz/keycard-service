@@ -1,0 +1,46 @@
+#!/bin/bash
+set -euo pipefail
+
+# Keycard Service: Pull events from door controllers
+# Replaces the legacy cron-based get-events script.
+# Exits non-zero if ANY controller fails to respond, so systemd marks the job failed.
+
+UHPPOUTED_CONF="${UHPPOUTED_CONF:-/etc/keycard-service/uhppoted.conf}"
+EVENTS_DIR="${EVENTS_DIR:-/var/lib/keycard-service/events}"
+STAGING_DIR="${STAGING_DIR:-/tmp/keycard-service}"
+
+# Ensure directories exist
+mkdir -p "${EVENTS_DIR}" "${STAGING_DIR}"
+
+BIN_DIR="/opt/keycard-service/bin"
+CONTROLLERS=(423195692 423195744 423195750)
+FAILURES=0
+
+get_events() {
+    local controller="$1"
+    local n=1
+    local staging="${STAGING_DIR}/${controller}.events"
+    local persist="${EVENTS_DIR}/${controller}.log"
+
+    while [ $n -le 25 ]; do
+        if "${BIN_DIR}/uhppote-cli" get-event "${controller}"; then
+            n=$(( n + 1 ))
+        else
+            break
+        fi
+    done > >(tee -a "${persist}" "${staging}") 2>/dev/null
+}
+
+for controller in "${CONTROLLERS[@]}"; do
+    if ! get_events "${controller}"; then
+        echo "ERROR: Failed to pull events from controller ${controller}" >&2
+        FAILURES=$((FAILURES + 1))
+    fi
+done
+
+if [ $FAILURES -gt 0 ]; then
+    echo "ERROR: ${FAILURES} controller(s) had event pull failures" >&2
+    exit 1
+fi
+
+echo "Successfully pulled events from ${#CONTROLLERS[@]} controller(s)"

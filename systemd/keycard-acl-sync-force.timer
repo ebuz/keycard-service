@@ -1,0 +1,9 @@
+[Unit]
+Description=Keycard Service: Force ACL sync from Wild Apricot (daily at 02:32)
+
+[Timer]
+OnCalendar=*-*-* 02:32:00
+Persistent=true
+
+[Install]
+WantedBy=timers.target

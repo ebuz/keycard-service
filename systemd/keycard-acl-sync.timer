@@ -1,0 +1,9 @@
+[Unit]
+Description=Keycard Service: Sync member ACL from Wild Apricot (every 8 minutes + daily force)
+
+[Timer]
+OnCalendar=*:0/8
+Persistent=true
+
+[Install]
+WantedBy=timers.target

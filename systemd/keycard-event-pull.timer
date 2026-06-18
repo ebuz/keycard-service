@@ -1,0 +1,9 @@
+[Unit]
+Description=Keycard Service: Pull events from door controllers (hourly)
+
+[Timer]
+OnCalendar=hourly
+Persistent=true
+
+[Install]
+WantedBy=timers.target

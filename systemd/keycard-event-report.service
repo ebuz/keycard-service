@@ -1,0 +1,18 @@
+[Unit]
+Description=Keycard Service: Import events and generate reports
+After=network-online.target
+Wants=network-online.target
+After=keycard-event-pull.service
+
+[Service]
+OnFailure=keycard-alert-handler@%n.service
+Type=oneshot
+User=keycard
+Group=keycard
+WorkingDirectory=/opt/keycard-service
+ExecStart=/opt/keycard-service/scripts/event-report
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target

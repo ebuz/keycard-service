@@ -1,0 +1,21 @@
+#!/bin/bash
+  
+DATETIME=$(date "+%Y-%m-%d")
+CREDENTIALS="/etc/uhppoted/.google/ubcs.json"
+CREDENTIALSW="/etc/uhppoted/.wild-apricot/google.json"
+REPORT="/var/ubcs/acl/UBCS.rpt"
+SPREADSHEET="https://docs.google.com/spreadsheets/d/1toyc9s1hIbC_lisDh1E7r8XFZfNsXhMX3CSv9R5rFMo"
+WILDAPRICOT="https://docs.google.com/spreadsheets/d/1V2NxKgbt-xdNdx4_qWHwJsW54gU7jEIdkN_h0iREqkU"
+ACL="/var/ubcs/acl/UBCS.acl"
+EVENTS="/tmp/events.tsv"
+DENIED="/tmp/denied.tsv"
+
+sqlite3 /var/ubcs/db/ubcs.db ".read /opt/uhppoted/events.sql"
+
+# ACL
+# ./uhppoted-app-sheets put --workdir /var/ubcs --credentials "${CREDENTIALS}" --url "${SPREADSHEET}" --range "Events!Q1:T" -file "${EVENTS}"
+# ./uhppoted-app-sheets put --workdir /var/ubcs --credentials "${CREDENTIALS}" --url "${SPREADSHEET}" --range "Denied!B1:D" -file "${DENIED}"
+
+# WILD APRICOT
+./uhppoted-app-sheets put --workdir /var/ubcs --credentials "${CREDENTIALSW}" --url "${WILDAPRICOT}" --range "Events!Q1:T" -file "${EVENTS}"
+./uhppoted-app-sheets put --workdir /var/ubcs --credentials "${CREDENTIALSW}" --url "${WILDAPRICOT}" --range "Denied!B1:D" -file "${DENIED}"

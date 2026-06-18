@@ -1,0 +1,9 @@
+[Unit]
+Description=Keycard Service: Dispatch alert on service failure
+
+[Service]
+OnFailure=keycard-alert-handler@%n.service
+Type=oneshot
+ExecStart=/opt/keycard-service/scripts/alert %i ${EXIT_CODE} "Keycard service unit failed"
+StandardOutput=journal
+StandardError=journal

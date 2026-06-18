@@ -1,0 +1,23 @@
+#!/bin/bash
+set -euo pipefail
+
+# Keycard Service: Sync controller clock times
+
+BIN_DIR="/opt/keycard-service/bin"
+CONTROLLERS=(423195692 423195744 423195750)
+FAILURES=0
+
+for controller in "${CONTROLLERS[@]}"; do
+    echo "Setting time on controller ${controller}..."
+    if ! "${BIN_DIR}/uhppote-cli" set-time "${controller}"; then
+        echo "ERROR: Failed to set time on controller ${controller}" >&2
+        FAILURES=$((FAILURES + 1))
+    fi
+done
+
+if [ $FAILURES -gt 0 ]; then
+    echo "ERROR: Failed to set time on ${FAILURES} controller(s)" >&2
+    exit 1
+fi
+
+echo "Clock sync completed successfully"

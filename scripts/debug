@@ -1,0 +1,54 @@
+#!/bin/bash
+  
+WILDAPRICOT="/etc/uhppoted/.wild-apricot/ubcs.json"
+RULES="https://drive.google.com/uc?export=download&id=10lvN7JMZQXgPnF7isIXmv_Cyc8B5s3_c"
+MEMBERS="/var/ubcs/wild-apricot/UBCS.members"
+ACL="/var/ubcs/wild-apricot/UBCS.acl"
+SUMMARY="/var/ubcs/wild-apricot/UBCS.log.tsv"
+REPORT="/var/ubcs/wild-apricot/UBCS.report.tsv"
+GOOGLE="/etc/uhppoted/.wild-apricot/google.json"
+SPREADSHEET="https://docs.google.com/spreadsheets/d/1V2NxKgbt-xdNdx4_qWHwJsW54gU7jEIdkN_h0iREqkU"
+
+FORCE=""
+
+if [[ -n $1 ]] && [[ $1 = "--force" ]]
+then
+   FORCE="--force"
+fi
+
+./uhppoted-app-wild-apricot get-members --workdir /var/ubcs --credentials "${WILDAPRICOT}"                    --file   "/home/uhppoted/members.tsv"
+./uhppoted-app-wild-apricot compare-acl --workdir /var/ubcs --credentials "${WILDAPRICOT}" --rules "${RULES}" --report "/home/uhppoted/compare.tsv"
+./uhppote-cli               get-acl     "/home/uhppoted/ACL.tsv"
+
+# ./uhppoted-app-wild-apricot load-acl --dry-run --workdir /var/ubcs --credentials "${WILDAPRICOT}" --rules "${RULES}" $FORCE --log "${SUMMARY}" --report "${REPORT}"
+# 
+# if [[ -f "${SUMMARY}" ]]
+# then
+#    echo "Uploading log to Google Sheets"
+#    cat "${SUMMARY}" >> /var/ubcs/wild-apricot/logs/UBCS.log
+#    cat /var/ubcs/wild-apricot/logs/* | sort | uniq > /var/tmp/wild-apricot.log
+#    ./uhppoted-app-sheets put --workdir /var/ubcs --credentials "${GOOGLE}" --url "${SPREADSHEET}" --range "Log!A2:H" --file "/var/tmp/wild-apricot.log"
+# fi
+# 
+# if [[ -f "${REPORT}" ]]
+# then
+#    echo "Uploading report to Google Sheets"
+#    cat "${REPORT}" >> /var/ubcs/wild-apricot/reports/UBCS.report
+# 
+# # (TEMPORARY - UNTIL SWITCHOVER) ONLY UPLOAD LAST REPORT BECAUSE IT'S LARGE (1600+ RECORDS)
+# #  cat /var/ubcs/wild-apricot/reports/* | sort | uniq > /var/tmp/wild-apricot.report
+#    cp /var/ubcs/wild-apricot/reports/UBCS.report /var/tmp/wild-apricot.report
+# 
+#    ./uhppoted-app-sheets put --workdir /var/ubcs --credentials "${GOOGLE}" --url "${SPREADSHEET}" --range "Report!A2:D" --file "/var/tmp/wild-apricot.report"
+# fi
+# 
+# if [[ -f "${SUMMARY}" || -f "${REPORT}" ]]
+# then
+#    # Fetch members and ACL
+#    ./uhppoted-app-wild-apricot get-members --credentials "${WILDAPRICOT}" --file "${MEMBERS}"
+#    ./uhppoted-app-wild-apricot get-acl     --credentials "${WILDAPRICOT}" --rules "${RULES}" --file "${ACL}"
+# 
+#    # Upload to Google Sheets
+#    ./uhppoted-app-sheets put --workdir /var/ubcs/wild-apricot --credentials "${GOOGLE}" --url "${SPREADSHEET}" --range "Members!A1:X" --file "${MEMBERS}"
+#    ./uhppoted-app-sheets put --workdir /var/ubcs/wild-apricot --credentials "${GOOGLE}" --url "${SPREADSHEET}" --range "ACL!B2:P" --file "${ACL}"
+# fi
